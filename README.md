@@ -4,6 +4,12 @@
 
 - [Dapper, a Large-Scale Distributed Systems Tracing Infrastructure](https://ai.google/research/pubs/pub36356)
 
+## OpenTracing 标准
+
+- [OpenTracing官方标准-中文版](https://github.com/opentracing-contrib/opentracing-specification-zh)
+  - [OpenTracing语义标准](https://github.com/opentracing-contrib/opentracing-specification-zh/blob/master/specification.md)
+  - [语义惯例](https://github.com/opentracing-contrib/opentracing-specification-zh/blob/master/semantic_conventions.md)
+
 ## 方案对比
 
 | 方案 | 项目地址 | 开源 | 开发语言 | 背后公司或组织 | Python支持 | 侵入性 |
