@@ -1,4 +1,10 @@
-# distributed-tracing-system
+# 分布式追踪系统
+
+## 原理论文
+
+- [Dapper, a Large-Scale Distributed Systems Tracing Infrastructure](https://ai.google/research/pubs/pub36356)
+
+## 方案对比
 
 | 方案 | 项目地址 | 开源 | 开发语言 | 背后公司或组织 | Python支持 | 侵入性 |
 | ---- | ---- | ---- | ---- | ---- | ---- | ---- |
