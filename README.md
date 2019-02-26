@@ -3,6 +3,7 @@
 ## 原理论文
 
 - [Dapper, a Large-Scale Distributed Systems Tracing Infrastructure](https://ai.google/research/pubs/pub36356)
+    - [Dapper，大规模分布式系统的跟踪系统(中文)](https://bigbully.github.io/Dapper-translation/)
 
 ## OpenTracing 标准
 
