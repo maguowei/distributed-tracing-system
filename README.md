@@ -32,3 +32,16 @@
     > Built with OpenTracing support from inception, Jaeger includes OpenTracing client libraries in several languages, including Java, Go, Python, Node.js, C++ and C#. It is a Cloud Native Computing Foundation member project.
 
     - 支持的语言: [Client libraries in different languages](https://github.com/jaegertracing/jaeger/issues/366)
+- 丰富的采样率设置支持 https://www.jaegertracing.io/docs/1.10/sampling/
+
+### Jaeger Python 
+
+ - [jaeger-client-python](https://github.com/jaegertracing/jaeger-client-python)
+ - [opentracing-python](https://github.com/opentracing/opentracing-python)
+ - [python-django](https://github.com/opentracing-contrib/python-django)
+ - [OpenTracing API Contributions (Python)](https://github.com/opentracing-contrib?utf8=%E2%9C%93&q=&type=&language=python)
+ - [uber-common/opentracing-python-instrumentation](https://github.com/uber-common/opentracing-python-instrumentation)
+
+### Links
+
+- [OpenTracing Tutorials](https://github.com/yurishkuro/opentracing-tutorial) A collection of tutorials for the OpenTracing API
