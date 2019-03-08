@@ -26,7 +26,7 @@
 | pinpoint | https://github.com/naver/pinpoint | 是 | Java | NAVER (一家韩国公司) | 不支持 | 侵入很低 | 否 | Java, PHP | 高 | HBase |
 |Elastic APM | https://github.com/elastic/apm-server| 是 | Go | Elastic | 官方支持 | 侵入很低 | 不完善 | Go, Java, Node.js, Python, Ruby | 中 | Elasticsearch | 
 
-## Jaeger 优势
+## Jaeger 
 
 - 背后有CNCF和Uber支持，开发活跃 [Jaeger Roadmap](https://www.jaegertracing.io/roadmap/)
 - 完全兼容 OpenTracing 标准, 支持多种主流语言
@@ -34,6 +34,12 @@
 
     - 支持的语言: [Client libraries in different languages](https://github.com/jaegertracing/jaeger/issues/366)
 - 丰富的采样率设置支持 https://www.jaegertracing.io/docs/1.10/sampling/
+
+### 原理图解
+
+![mirror](./imgs/architecture.png)
+![mirror](./imgs/spans-traces.png)
+![mirror](./imgs/context-prop.png)
 
 ### Jaeger Python 
 
