@@ -91,7 +91,7 @@ OpenTracing 通过提供平台无关、厂商无关的 API，使得开发人员�
 ### 为什么选择Jaeger
 
 - 背后有CNCF和Uber支持，开发活跃 [Jaeger Roadmap](https://www.jaegertracing.io/roadmap/)
-- 原生支持 OpenTracing 标准, 支持多种主流语言
+- 原生兼容 OpenTracing 标准, 支持多种主流语言
     > Built with OpenTracing support from inception, Jaeger includes OpenTracing client libraries in several languages, including Java, Go, Python, Node.js, C++ and C#. It is a Cloud Native Computing Foundation member project.
 
     - 支持的语言: [Client libraries in different languages](https://github.com/jaegertracing/jaeger/issues/366)
@@ -159,6 +159,45 @@ Jaeger更专注于链路追踪(tracing), 日志和指标功能比较弱
 ```bash
 $ git clone https://github.com/maguowei/distributed-tracing-system.git
 $ cd distributed-tracing-system
+
+# 这里我们选择Elasticsearch作为存储 当前Jaeger还不支持最新的 Elasticsearch 7.0 [issues: Support Elasticsearch 7.x](https://github.com/jaegertracing/jaeger/issues/1474)
+
+# 这里我们以Elasticsearch 6.7版本为例, 简单创建 elasticsearch
+$ kubectl create -f deployment/kubernetes/elasticsearch
+
+# 部署Jaeger全家桶(Agent, Collector, Query)
+$ kubectl create -f deployment/kubernetes/jaeger
+
+# 以NodePort 方式暴露 Query UI
+$ kubectl expose service jaeger-query --port 16686 --type NodePort --name jaeger-query-node-port
+
+# 访问 http://127.0.0.1:16686
+```
+![mirror](./imgs/jaeger/Jaeger-Query-UI.png)
+
+- [Take OpenTracing for a HotROD ride](https://medium.com/opentracing/take-opentracing-for-a-hotrod-ride-f6e3141f7941)
+
+```bash
+# 当前Query 中可以看到是空的，我们运行 官方的 HotROD 微服务示例，生成一些数据
+$ kubectl create -f deployment/kubernetes/example
+$ kubectl expose service jaeger-example-hotrod --port 8080 --type NodePort --name jaeger-example-hotrod-node-port
+
+# 任意点击街面上的按钮，来生成一写调用数据
+```
+![mirror](./imgs/jaeger/HotROD.png)
+
+
+![mirror](./imgs/jaeger/Jaeger-Query-UI-Data.png)
+
+![mirror](./imgs/jaeger/Jaeger-Query-Trace.png)
+![mirror](./imgs/jaeger/Jaeger-Query-Trace-Graph.png)
+
+
+#### Agent 的部署模式
+
+Agent 官方目前有两种部署方案， 一种是 DaemonSet 方式， 一种是sidecar 方式
+
+##### Agent 以 DaemonSet 模式部署
 
 # 这里我们选择Elasticsearch作为存储 当前Jaeger还不支持最新的 Elasticsearch 7.0 [issues: Support Elasticsearch 7.x](https://github.com/jaegertracing/jaeger/issues/1474)
 
@@ -385,12 +424,8 @@ $ kubectl delete service jaeger-query-node-port
 - [Metrics, tracing, and logging](https://peter.bourgon.org/blog/2017/02/21/metrics-tracing-and-logging.html)
 - [OpenTracing Supported tracers](https://opentracing.io/docs/supported-tracers/)
 - [Deployment strategies for the Jaeger Agent](https://medium.com/jaegertracing/deployment-strategies-for-the-jaeger-agent-1d6f91796d09)
-<<<<<<< HEAD
 - [Kubernetes DNS 高阶指南](https://juejin.im/entry/5b84a90f51882542e60663cc)
 - [Take OpenTracing for a HotROD ride](https://medium.com/opentracing/take-opentracing-for-a-hotrod-ride-f6e3141f7941)
 - [Monitoring Jaeger](https://www.jaegertracing.io/docs/1.12/monitoring/)
-=======
-- [Take OpenTracing for a HotROD ride](https://medium.com/opentracing/take-opentracing-for-a-hotrod-ride-f6e3141f7941)
->>>>>>> up
 - [APM和调用链跟踪](https://skywalking.apache.org/zh/blog/2019-03-29-introduction-of-skywalking-and-simple-practice.html)
 - [Jaeger vs Apache Skywalking](https://blog.getantler.io/jaeger-vs-apache-skywalking/)
