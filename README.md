@@ -22,7 +22,7 @@ Logging 主要记录一些离散的事件，应用往往通过将定义好格式
  
 Metric 往往是一些聚合的信息，相比Logging 丧失了一些具体信息，但是占用的空间会要比完整日志小的多，可以用于监控和报警，在这方面 `prometheus` 已经基本上成为了事实上的标准。
 
-Tracing 介于Logging 和 Metric 之间， 即保留了必要的信息，又将分散的日志点通过 span 串联， 帮助我们更好的理解系统的行为、辅助调试和排查性能问题
+Tracing 介于Logging 和 Metric 之间， 往往以请求的纬度，串联服务间的调用信息，即保留了必要的信息，又将分散的日志事件通过 span 串联， 帮助我们更好的理解系统的行为、辅助调试和排查性能问题
 
 这篇文章详细讨论了三者的关系，有兴趣可以参考: [Metrics, tracing 和 logging 的关系](https://github.com/wu-sheng/me/blob/master/articles/metrics-tracing-and-logging.md#metrics-tracing-%E5%92%8C-logging-%E7%9A%84%E5%85%B3%E7%B3%BB)
 
