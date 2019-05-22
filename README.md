@@ -24,7 +24,7 @@ Logging，Metrics 和 Tracing 有各自专注的部分， 这三者也有相互�
 > Tracing的最大特点就是，它在单次请求的范围内，处理信息。 任何的数据、元数据信息都被绑定到系统中的单个事务上。 例如：一次调用远程服务的RPC执行过程；一次实际的SQL查询语句；一次HTTP请求的业务性ID。
 
 
-关于三者关系的更详细信息可参考: [Metrics, tracing 和 logging 的关系](https://github.com/wu-sheng/me/blob/master/articles/metrics-tracing-and-logging.md#metrics-tracing-%E5%92%8C-logging-%E7%9A%84%E5%85%B3%E7%B3%BB)
+这篇文章详细讨论了三者的关系，有兴趣可以参考: [Metrics, tracing 和 logging 的关系](https://github.com/wu-sheng/me/blob/master/articles/metrics-tracing-and-logging.md#metrics-tracing-%E5%92%8C-logging-%E7%9A%84%E5%85%B3%E7%B3%BB)
 
 日志是最传统的也是最必不可少的，目前日志已经有 `ELK` 这样的成熟方案, `Metrics` 方面 `prometheus` 已经基本上成为了事实上的标准。
 
@@ -42,6 +42,10 @@ Logging，Metrics 和 Tracing 有各自专注的部分， 这三者也有相互�
 
 云原生基金会(CNCF) 推出了 OpenTracing 标准，用来标准化Trace数据结构和格式。
 OpenTracing 通过提供平台无关、厂商无关的 API，使得开发人员能够方便的添加（或更换）追踪系统的实现。比如从Zipkin替换成Jaeger/Skywalking等后端。
+
+就在写这篇文章的同时，在kubecon 2019 CNCF宣布 OpenTracing 和 Google 的 OpenCensus 项目合并。从目前看是要在Tracing的基础上增加更多的Metrics特性，有兴趣的可以参考：https://opentelemetry.io/
+
+目前新项目仍然还在建设中，不过已经承诺了对现有 OpenTracing 提供兼容。
 
 在OpenTracing中，主要定义以下基本概念
 
@@ -84,20 +88,29 @@ OpenTracing 通过提供平台无关、厂商无关的 API，使得开发人员�
 
 ## Jaeger 
 
+### 为什么选择Jaeger
+
 - 背后有CNCF和Uber支持，开发活跃 [Jaeger Roadmap](https://www.jaegertracing.io/roadmap/)
-- 完全兼容 OpenTracing 标准, 支持多种主流语言
+- 原生支持 OpenTracing 标准, 支持多种主流语言
     > Built with OpenTracing support from inception, Jaeger includes OpenTracing client libraries in several languages, including Java, Go, Python, Node.js, C++ and C#. It is a Cloud Native Computing Foundation member project.
 
     - 支持的语言: [Client libraries in different languages](https://github.com/jaegertracing/jaeger/issues/366)
 - 丰富的采样率设置支持 https://www.jaegertracing.io/docs/1.12/sampling/
 
-缺点:
+- 高扩展，易伸缩
+- 多种存储后端支持
+- 现代的 Web UI 
+- 支持云原生的部署方式，非常容易部署在 kubernetes集群中
+- 可观察性 所有组默认件均可暴露 Prometheus metrics
+
+### 缺点:
 有一定的侵入性
 Jaeger更专注于链路追踪(tracing), 日志和指标功能比较弱
 
+
 需要考虑的问题:
 
-1. 性能损耗 
+1. 低性能损耗 
 2. 应用级的透明  尽量减少业务的侵入，目标是尽量少改或者不用修改代码
 3. 扩展性
 
@@ -131,10 +144,9 @@ Jaeger更专注于链路追踪(tracing), 日志和指标功能比较弱
 
 - 客户端库  实现了OpenTarcing API. 可以手动也可以通过已经集成OpenTracing 的框架工具实现应用的分布式追踪， 像 Flask, Dropwizard, gRPC 等都已经有现成的集成工具库。
 
-每当接受到新的请求，就会创建 span 并关联上下文信息（trace id、span id 和 baggage）。只有 id 和 baggage 会随请求向下传递，而所有组成 span 的其他信息，如操作名称、日志等，不会在同一个trace 的span间传递。通过采样得到的 span 会在后台异步发送到 Jaeger Agents 上。
+    每当接受到新的请求，就会创建 span 并关联上下文信息（trace id、span id 和 baggage）。只有 id 和 baggage 会随请求向下传递，而所有组成 span 的其他信息，如操作名称、日志等，不会在同一个trace 的span间传递。通过采样得到的 span 会在后台异步发送到 Jaeger Agents 上。
 
-需要注意的是虽然所有的tarces都会创建，但是只有少部分会被采样，采样到的trace会被标记并用于后续的处理和存储。默认情况下，Jaeger client 的采样率是 0.1% 
-也就是 千分之一，并且可以从 Agent上取回采样率设置。
+    需要注意的是虽然所有的tarces都会创建，但是只有少部分会被采样，采样到的trace会被标记并用于后续的处理和存储。默认情况下，Jaeger client 的采样率是 0.1%, 也就是 千分之一，并且可以从 Agent上取回采样率设置。
 
 - Agent  是一个网络守护进程，监听通过 UDP 发送过来的 spans，并将其批量发送给 Collector。按设计 Agent 要作为基础设施被部署到所有主机节点。Agent 将 collector 和客户端之间的路由与发现机制抽象了出来。
 
@@ -144,27 +156,142 @@ Jaeger更专注于链路追踪(tracing), 日志和指标功能比较弱
 
 ### 部署实践
 
-#### agent 以 DaemonSet 模式部署
+```bash
+$ git clone https://github.com/maguowei/distributed-tracing-system.git
+$ cd distributed-tracing-system
 
-- [Kubernetes DNS 高阶指南](https://juejin.im/entry/5b84a90f51882542e60663cc)
+# 这里我们选择Elasticsearch作为存储 当前Jaeger还不支持最新的 Elasticsearch 7.0 [issues: Support Elasticsearch 7.x](https://github.com/jaegertracing/jaeger/issues/1474)
+
+# 这里我们以Elasticsearch 6.7版本为例, 简单创建 elasticsearch
+$ kubectl create -f deployment/kubernetes/elasticsearch
+
+# 部署Jaeger全家桶(Agent, Collector, Query)
+$ kubectl create -f deployment/kubernetes/jaeger
+
+# 以NodePort 方式暴露 Query UI
+$ kubectl expose service jaeger-query --port 16686 --type NodePort --name jaeger-query-node-port
+
+# 访问 http://127.0.0.1:16686
+```
+![mirror](./imgs/jaeger/Jaeger-Query-UI.png)
 
 ```bash
-env:
-- name: JAEGER_AGENT_HOST
-  valueFrom:
-    fieldRef:
-      fieldPath: status.hostIP
+# 当前Query 中可以看到是空的，我们运行 官方的 HotROD 微服务示例，生成一些数据
+$ kubectl create -f deployment/kubernetes/example
+$ kubectl expose service jaeger-example-hotrod --port 8080 --type NodePort --name jaeger-example-hotrod-node-port
+
+# 任意点击页面上的按钮，生成一写调用数据
+```
+![mirror](./imgs/jaeger/HotROD.png)
+![mirror](./imgs/jaeger/Jaeger-Query-UI-Data.png)
+![mirror](./imgs/jaeger/Jaeger-Query-Trace.png)
+![mirror](./imgs/jaeger/Jaeger-Query-Trace-Graph.png)
+
+
+#### Agent 的部署模式
+
+Agent 官方目前有两种部署方案， 一种是 DaemonSet 方式， 一种是sidecar 方式
+
+##### Agent 以 DaemonSet 模式部署
+
+```bash
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: jaeger-agent
+  labels:
+    app: jaeger-agent
+spec:
+  selector:
+    matchLabels:
+      app: jaeger-agent
+  template:
+    metadata:
+      labels:
+        app: jaeger-agent
+    spec:
+      containers:
+        - name: jaeger-agent
+          image: jaegertracing/jaeger-agent:1.12.0
+          env:
+            - name: REPORTER_GRPC_HOST_PORT
+              value: "jaeger-collector:14250"
+          resources: {}
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      restartPolicy: Always
 ```
 
-#### agent以sidecar模式部署
-- https://medium.com/jaegertracing/deployment-strategies-for-the-jaeger-agent-1d6f91796d09
+```bash
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp
+spec:
+  selector:
+    matchLabels:
+      app: myapp
+  template:
+    metadata:
+      labels:
+        app: myapp
+    spec:
+      containers:
+      - name: myapp
+        image: acme/myapp:myversion
+        env:
+        - name: JAEGER_AGENT_HOST
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+```
+
+##### agent以sidecar模式部署
 - https://github.com/jaegertracing/jaeger-kubernetes#deploying-the-agent-as-sidecar
 - https://github.com/jaegertracing/jaeger-operator#auto-injection-of-jaeger-agent-sidecars
-- [Auto injection of Jaeger Agent sidecars]()
 
-#### HotROD example
-- [Take OpenTracing for a HotROD ride](https://medium.com/opentracing/take-opentracing-for-a-hotrod-ride-f6e3141f7941)
+```bash
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp
+  labels:
+    app: myapp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: myapp
+  template:
+    metadata:
+      labels:
+        app: myapp
+    spec:
+      containers:
+        - name: myapp
+          image: example/myapp
+        - name: jaeger-agent
+          image: jaegertracing/jaeger-agent:1.12.0
+          env:
+            - name: REPORTER_GRPC_HOST_PORT
+              value: "jaeger-collector:14250"
+```
+这样 Jaeger Agent 将会监听 localhost:5775/localhost:6831/localhost:6832/localhost:5778. 这些本地端口，通胀，你不需要再在client配置中制定hostname或者端口，应为这都是默认值。
 
+
+##### 选择 DaemonSet 还是 sidecar
+
+按照官方的说法，Jaeger 中的 Agent 组件是作为 tracer 和Collector之间的 buffer, 所以Agent应该离tracer越近越好，通常应该是 tarcer的
+`localhost`, 基于这样的假定，tracer 能够直接通过 UDP发送span到Agent, 达到最好的性能和可靠性之间的平衡。
+
+但是这样的假定在裸机服务器上部署非常棒，但是在现有的云环境和容器中，对于 Kubernetes 来说究竟是么是本地（`localhost`）呢？
+是服务运行所在的节点还是 pod 本身呢?
+
+DaemonSet 的pod 运行在节点级别，这样的pod如同每个节点上的守护进程，Kubernetes 保证每个节点有且只有一个Agent pod运行, 如果以DaemonSet 方式部署，则意味着这个Agent 会接受节点上所有应用pods发送的数据，对于Agent来说所有的pod都是同等对待的。这样确实能够节省一些内存，但是一个Agent可能要服务同一个节点上的数百个pods.
+
+Sidecar 是在应用pod中增加其他服务，在kubernetes 服务是以pod为基本单位的，但是一个pod可以包含多个容器, 这通常可以实现一些基础设施服务， 在Sidecar 方式部署下，对于 Jaeger Agent 会作为pod 中的一个容器和tarcer并存，由于运行在应用级别，不需要额外的权限，每一个应用都可以将数据发送到不同的Collector 后端。这样能保证更好的服务扩展性。
+
+基于你的部署架构，如果是私有云环境，且信任 kubernetes 集群上运行的应用，可能占用更少能存的DaemonSet 会适合你。如果是公有云环境，或者希望获得多租户能力，Sidecar 可能更好一些，尽管内存占用会稍多一些（每个Agent内存占用在20M以内）
 
 #### Jaeger dependencies
 
@@ -174,9 +301,38 @@ Jager Query UI服务中的 dependencies 选项默认点开为空，需要设置 
  spark-dependencies 是一个Spark job 可以聚合和分析存储中的数据，生成服务间的依赖关系图，并将依赖链接信息持久化到存储中。
 之后 jaeger query Dependencies页面就可以显示服务之间的依赖关系。
 
+```bash
+# 可以手动只执行一次
+$ kubectl run -it --rm jaeger-spark-dependencies --env=STORAGE=elasticsearch --env ES_NODES=http://jaeger-elasticsearch:9200 --env ES_NODES_WAN_ONLY=true --restart=Never --image=jaegertracing/spark-dependencies
+
+# 也可以创建 CronJob， 每天定点生成新的依赖图
+$ kubectl create -f deployment/kubernetes/spark-dependencies/jaeger-spark-dependencies-cronjob.yaml
+```
+![mirror](./imgs/jaeger/spark-dependencies.png)
+
+### 在服务中集成 Jaeger 分布式追踪
+
+```bash
+
+```
+
 ##### 监控和报警
 
-当前Jaeger缺少自带的报警机制，但是由于存储可以使用es，配合Grafana就可以实现简单的报警监控。
+当前Jaeger缺少自带的报警机制，但是由于存储可以使用Elasticsearch配合Grafana就可以实现简单的报警监控。
+![mirror](./imgs/monitoring/grafana-span.png)
+Jaeger本身提供Prometheus的 加上grafana可以方便的监控 Jaeger本身。
+![mirror](./imgs/monitoring/Jaeger-prometheus.png)
+
+## 资源清理
+```bash
+# 演示完毕，最后做一下资源的清理和释放
+$ kubectl delete -f deployment/kubernetes/spark-dependencies
+$ kubectl delete -f deployment/kubernetes/example
+$ kubectl delete -f deployment/kubernetes/jaeger
+$ kubectl delete -f deployment/kubernetes/elasticsearch
+$ kubectl delete service jaeger-example-hotrod-node-port
+$ kubectl delete service jaeger-query-node-port
+```
 
 ### Jaeger Python 
 
@@ -194,9 +350,11 @@ Jager Query UI服务中的 dependencies 选项默认点开为空，需要设置 
 - [Dapper，大规模分布式系统的跟踪系统(中文)](https://bigbully.github.io/Dapper-translation/)
 - [OpenTracing Tutorials](https://github.com/yurishkuro/opentracing-tutorial) A collection of tutorials for the OpenTracing API
 - [CNCF Cloud Native Landscape](https://landscape.cncf.io/)
-- [观察之道：带你走进可观察性](https://www.infoq.cn/article/observability-enhance)
 - [Metrics, tracing, and logging](https://peter.bourgon.org/blog/2017/02/21/metrics-tracing-and-logging.html)
-- [Chaos Engineering 的历史、原则以及实践](https://www.infoq.cn/article/chaos-engineering-the-history-principles-and-practice)
+- [OpenTracing Supported tracers](https://opentracing.io/docs/supported-tracers/)
 - [Deployment strategies for the Jaeger Agent](https://medium.com/jaegertracing/deployment-strategies-for-the-jaeger-agent-1d6f91796d09)
+- [Kubernetes DNS 高阶指南](https://juejin.im/entry/5b84a90f51882542e60663cc)
+- [Take OpenTracing for a HotROD ride](https://medium.com/opentracing/take-opentracing-for-a-hotrod-ride-f6e3141f7941)
+- [Monitoring Jaeger](https://www.jaegertracing.io/docs/1.12/monitoring/)
 - [APM和调用链跟踪](https://skywalking.apache.org/zh/blog/2019-03-29-introduction-of-skywalking-and-simple-practice.html)
 - [Jaeger vs Apache Skywalking](https://blog.getantler.io/jaeger-vs-apache-skywalking/)
