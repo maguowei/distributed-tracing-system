@@ -175,20 +175,15 @@ $ kubectl expose service jaeger-query --port 16686 --type NodePort --name jaeger
 ```
 ![mirror](./imgs/jaeger/Jaeger-Query-UI.png)
 
-- [Take OpenTracing for a HotROD ride](https://medium.com/opentracing/take-opentracing-for-a-hotrod-ride-f6e3141f7941)
-
 ```bash
 # 当前Query 中可以看到是空的，我们运行 官方的 HotROD 微服务示例，生成一些数据
 $ kubectl create -f deployment/kubernetes/example
 $ kubectl expose service jaeger-example-hotrod --port 8080 --type NodePort --name jaeger-example-hotrod-node-port
 
-# 任意点击街面上的按钮，来生成一写调用数据
+# 任意点击页面上的按钮，生成一写调用数据
 ```
 ![mirror](./imgs/jaeger/HotROD.png)
-
-
 ![mirror](./imgs/jaeger/Jaeger-Query-UI-Data.png)
-
 ![mirror](./imgs/jaeger/Jaeger-Query-Trace.png)
 ![mirror](./imgs/jaeger/Jaeger-Query-Trace-Graph.png)
 
