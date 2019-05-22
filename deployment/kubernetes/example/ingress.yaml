@@ -6,7 +6,7 @@ metadata:
   name: jaeger-example-hotrod
 spec:
   rules:
-    - host: jaeger-example-hotrod.nuc
+    - host: jaeger-example-hotrod.example.com
       http:
         paths:
           - path: /
