@@ -6,7 +6,7 @@
 
 ## `可观察性`(Observability)
 
-为了应对这些问题，我们引入`可观察性` 概念，可观察性目前主要包含以下三个方面
+为了应对这些问题，`可观察性` 概念被引入IT 领域，可观察性目前主要包含以下三个方面
 
 - 日志(Logging)
 - 度量(Metrics)
@@ -355,7 +355,7 @@ $ kubectl create -f deployment/kubernetes/spark-dependencies/jaeger-spark-depend
 
 当前Jaeger缺少自带的报警机制，但是由于存储可以使用Elasticsearch配合Grafana就可以实现简单的报警监控。
 ![mirror](./imgs/monitoring/grafana-span.png)
-Jaeger本身提供Prometheus的 加上grafana可以方便的监控 Jaeger本身。
+Jaeger本身暴露了prometheus 格式的metrics 信息 加上grafana可以方便的监控 Jaeger本身的运行状态。
 ![mirror](./imgs/monitoring/Jaeger-prometheus.png)
 
 ## 资源清理
