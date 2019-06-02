@@ -57,12 +57,13 @@ Twitter基于这篇论文开发了 `Zipkin` 并开源了这个项目。再之后
 
 在 `OpenTracing` 中，主要定义以下基本概念
 
-1、Trace(调用链): OpenTracing中的Trace（调用链）通过归属于此调用链的Span来隐性的定义。一条Trace（调用链）可以被认为是一个由多个Span组成的有向无环图（DAG图）， Span与Span的关系被命名为References。
-2、Span(跨度)：可以被翻译为跨度，可以被理解为一次方法调用, 一个程序块的调用, 或者一次RPC/数据库访问. 只要是一个具有完整时间周期的程序访问，都可以被认为是一个span
+> 1、Trace(调用链): OpenTracing中的Trace（调用链）通过归属于此调用链的Span来隐性的定义。一条Trace（调用链）可以被认为是一个由多个Span组成的有向无环图（DAG图）， Span与Span的关系被命名为References。
+
+> 2、Span(跨度)：可以被翻译为跨度，可以被理解为一次方法调用, 一个程序块的调用, 或者一次RPC/数据库访问. 只要是一个具有完整时间周期的程序访问，都可以被认为是一个span
 
 单个Trace中，span间的因果关系
-```
 
+```bash
         [Span A]  ←←←(the root span)
             |
      +------+------+
@@ -77,10 +78,12 @@ Twitter基于这篇论文开发了 `Zipkin` 并开源了这个项目。再之后
                                        ↑
                          (Span G 在 Span F 后被调用, FollowsFrom)
 ```
+
 有些时候，使用下面这种，基于时间轴的时序图可以更好的展现Trace（调用链）：
 
 单个Trace中，span间的时间关系
-```
+
+```bash
 ––|–––––––|–––––––|–––––––|–––––––|–––––––|–––––––|–––––––|–> time
 
  [Span A···················································]
@@ -89,8 +92,8 @@ Twitter基于这篇论文开发了 `Zipkin` 并开源了这个项目。再之后
     [Span C········································]
          [Span E·······]        [Span F··] [Span G··] [Span H··]
 ```
-每个Span包含以下的状态:（译者注：由于这些状态会反映在OpenTracing API中，所以会保留部分英文说明）
 
+每个Span包含以下的状态:
 1. An operation name，操作名称
 2. A start timestamp，起始时间
 3. A finish timestamp，结束时间
@@ -145,8 +148,8 @@ Baggage Items，Trace的随行数据，是一个键值对集合，它存在于tr
 - 背后有 `CNCF` 和 `Uber` 支持，开发活跃 [Jaeger Roadmap](https://www.jaegertracing.io/roadmap/)
 - 原生兼容 OpenTracing 标准, 支持多种主流语言, 可以复用大量的 OpenTracing 组件
     > Built with `OpenTracing` support from inception, Jaeger includes OpenTracing client libraries in several languages, including Java, Go, Python, Node.js, C++ and C#. It is a Cloud Native Computing Foundation member project.
+  - 支持的语言: [Client libraries in different languages](https://github.com/jaegertracing/jaeger/issues/366)
 
-    - 支持的语言: [Client libraries in different languages](https://github.com/jaegertracing/jaeger/issues/366)
 - 丰富的采样率设置支持 https://www.jaegertracing.io/docs/1.12/sampling/
 - 高扩展，易伸缩
 - 多种存储后端支持
@@ -376,15 +379,7 @@ $ kubectl delete service jaeger-example-hotrod-node-port
 $ kubectl delete service jaeger-query-node-port
 ```
 
-## Jaeger Python
-
-- [jaeger-client-python](https://github.com/jaegertracing/jaeger-client-python)
-- [opentracing-python](https://github.com/opentracing/opentracing-python)
-- [python-django](https://github.com/opentracing-contrib/python-django)
-- [OpenTracing API Contributions (Python)](https://github.com/opentracing-contrib?utf8=%E2%9C%93&q=&type=&language=python)
-- [uber-common/opentracing-python-instrumentation](https://github.com/uber-common/opentracing-python-instrumentation)
-
-## Links
+## 参考链接
 
 - [观察之道：带你走进可观察性](https://www.infoq.cn/article/observability-enhance)
 - [关于可观察性的三大支柱，你应该了解这些](https://www.infoq.cn/article/N64dDo-kRPvYbK4jCeET)
