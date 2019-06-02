@@ -1,22 +1,24 @@
 # 利用Jaeger打造云原生架构下分布式追踪系统
 
+![tracing](./imgs/tracing.png)
+
 随着应用容器化和微服务的兴起，借由`Docker`和 `Kubernetes` 等工具, 服务的快速开发和部署成为可能，构建微服务应用变得越来越简单。
 
 但是随着大型单体应用拆分为微服务，服务之间的依赖和调用变得极为复杂，这些服务可能是不同团队开发的，可能基于不同的语言，微服务之间可能是利用RPC, RESTful API, 也可能是通过消息队列实现调用或通讯。如何理清服务依赖调用关系，如何在这样的环境下迅速debug和排查问题, 追踪各服务处理耗时，查找服务性能瓶颈, 合理对服务的容量评估都变成一个棘手的事情。
 
 ## `可观察性`(Observability)
 
-为了应对这些问题，`可观察性` 概念被引入IT 领域，可观察性目前主要包含以下三个方面
+为了应对这些问题，`可观察性(Observability)` 概念被引入IT 领域，可观察性目前主要包含以下三个方面
 
 - 日志(Logging)
 - 度量(Metrics)
 - 分布式追踪(Tracing)
 
-![mirror](./imgs/CNCF-Observability.png)
+![Observability](./imgs/CNCF-Observability.png)
 
 Logging，Metrics 和 Tracing 有各自专注的部分， 这三者也有相互重叠的部分
 
-![mirror](./imgs/metrics-tracing-and-logging.png)
+![metrics-tracing-and-logging](./imgs/metrics-tracing-and-logging.png)
 
 Logging 主要记录一些离散的事件，应用往往通过将定义好格式的日志信息输出到文件，然后用日志收集程序收集起来用于分析和聚合。目前已经有 `ELK` 这样的成熟方案, 相比之下日志记录的信息最为全面和丰富，占用的存储资源正常情况下也最多，虽然可以用时间将所有日志点事件串联起来，但是却很难展示完整的调用关系路径。
  
@@ -158,9 +160,9 @@ Jaeger更专注于链路追踪(tracing), 日志和指标功能比较弱
 
 ### 架构图解
 
-![mirror](./imgs/jaeger/architecture.png)
-![mirror](./imgs/jaeger/spans-traces.png)
-![mirror](./imgs/jaeger/context-prop.png)
+![architecture](./imgs/jaeger/architecture.png)
+![spans-traces](./imgs/jaeger/spans-traces.png)
+![context-prop](./imgs/jaeger/context-prop.png)
 
 ### 组件
 
@@ -208,7 +210,7 @@ $ kubectl expose service jaeger-query --port 16686 --type NodePort --name jaeger
 
 # 访问 http://127.0.0.1:16686
 ```
-![mirror](./imgs/jaeger/Jaeger-Query-UI.png)
+![Jaeger-Query-UI](./imgs/jaeger/Jaeger-Query-UI.png)
 
 ```bash
 # 当前Query 中可以看到是空的，我们运行 官方的 HotROD 微服务示例，生成一些数据
@@ -217,10 +219,10 @@ $ kubectl expose service jaeger-example-hotrod --port 8080 --type NodePort --nam
 
 # 任意点击页面上的按钮，生成一写调用数据
 ```
-![mirror](./imgs/jaeger/HotROD.png)
-![mirror](./imgs/jaeger/Jaeger-Query-UI-Data.png)
-![mirror](./imgs/jaeger/Jaeger-Query-Trace.png)
-![mirror](./imgs/jaeger/Jaeger-Query-Trace-Graph.png)
+![HotROD](./imgs/jaeger/HotROD.png)
+![Jaeger-Query-UI-Data](./imgs/jaeger/Jaeger-Query-UI-Data.png)
+![Jaeger-Query-Trace](./imgs/jaeger/Jaeger-Query-Trace.png)
+![Jaeger-Query-Trace-Graph](./imgs/jaeger/Jaeger-Query-Trace-Graph.png)
 
 
 ##### 选择 DaemonSet 还是 sidecar
@@ -342,7 +344,7 @@ $ kubectl run -it --rm jaeger-spark-dependencies --env=STORAGE=elasticsearch --e
 # 也可以创建 CronJob， 每天定点生成新的依赖图
 $ kubectl create -f deployment/kubernetes/spark-dependencies/jaeger-spark-dependencies-cronjob.yaml
 ```
-![mirror](./imgs/jaeger/spark-dependencies.png)
+![spark-dependencies](./imgs/jaeger/spark-dependencies.png)
 
 ### 示例：以Python Django项目为例在服务中集成Jaeger
 
@@ -354,9 +356,9 @@ $ kubectl create -f deployment/kubernetes/spark-dependencies/jaeger-spark-depend
 ##### 监控和报警
 
 当前Jaeger缺少自带的报警机制，但是由于存储可以使用Elasticsearch配合Grafana就可以实现简单的报警监控。
-![mirror](./imgs/monitoring/grafana-span.png)
+![grafana-span](./imgs/monitoring/grafana-span.png)
 Jaeger本身暴露了prometheus 格式的metrics 信息 加上grafana可以方便的监控 Jaeger本身的运行状态。
-![mirror](./imgs/monitoring/Jaeger-prometheus.png)
+![Jaeger-prometheus](./imgs/monitoring/Jaeger-prometheus.png)
 
 ## 资源清理
 
