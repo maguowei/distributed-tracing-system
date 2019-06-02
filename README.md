@@ -38,7 +38,7 @@ Tracing 介于Logging 和 Metric 之间， 往往以请求的纬度，串联服�
 - 容量规划与评估
 - 配合Logging和Metric强化监控和报警
 
-让 `Tracing` 流行起来最早由于 `Google` 的这篇论文 [Dapper, a Large-Scale Distributed Systems Tracing Infrastructure](https://ai.google/research/pubs/pub36356)
+让 `Tracing` 流行起来最早由于 `Google` 的这篇论文 [Dapper, a Large-Scale Distributed Systems Tracing Infrastructure][3]
 
 Twitter基于这篇论文开发了 `Zipkin` 并开源了这个项目。再之后业界百花齐放，诞生了一大批开源和商业 `Tracing` 系统。
 
@@ -120,7 +120,7 @@ Baggage Items，Trace的随行数据，是一个键值对集合，它存在于tr
 ## 目前主流开源方案及对比
 
 | 方案 | 项目地址 | 开发语言 | 背后公司或组织 | Python支持 | 侵入性 | OpenTracing 兼容 | 客户端支持语言 | UI丰富度 | 存储 |
-| ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- |
+| ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- |
 |  jaeger | https://github.com/jaegertracing/jaeger | Go | CNCF/Google、 Uber | 官方支持，较为完善 | 部分侵入 | 是 | Java, Go, Python, Node.js, C++ and C# | 中 | Memory, Cassandra, Elasticsearch, Kafka |
 | zipkin | https://github.com/apache/incubator-zipkin | Java | Apache/Twitter | 第三方支持，一般 | 侵入性强 | 是 | Java, C#, Go, PHP, Python 等 https://zipkin.apache.org/pages/tracers_instrumentation.html | 中 | Memory, Cassandra, ElasticSearch and MySQL |
 | Apache SkyWalking | https://github.com/apache/incubator-skywalking | Java | Apache | 暂无 | 侵入性很低 | 是 | Java, .NET Core, NodeJS and PHP | 较高 | H2、ElasticSearch 6、MySQL、TiDB https://github.com/apache/incubator-skywalking/blob/master/docs/en/setup/backend/backend-storage.md |
@@ -379,19 +379,16 @@ $ kubectl delete service jaeger-example-hotrod-node-port
 $ kubectl delete service jaeger-query-node-port
 ```
 
-## 参考链接
-
-- [观察之道：带你走进可观察性](https://www.infoq.cn/article/observability-enhance)
-- [关于可观察性的三大支柱，你应该了解这些](https://www.infoq.cn/article/N64dDo-kRPvYbK4jCeET)
-- [Dapper, a Large-Scale Distributed Systems Tracing Infrastructure](https://ai.google/research/pubs/pub36356)
-- [Dapper，大规模分布式系统的跟踪系统(中文)](https://bigbully.github.io/Dapper-translation/)
-- [OpenTracing Tutorials](https://github.com/yurishkuro/opentracing-tutorial) A collection of tutorials for the OpenTracing API
-- [CNCF Cloud Native Landscape](https://landscape.cncf.io/)
-- [Metrics, tracing, and logging](https://peter.bourgon.org/blog/2017/02/21/metrics-tracing-and-logging.html)
-- [OpenTracing Supported tracers](https://opentracing.io/docs/supported-tracers/)
-- [Deployment strategies for the Jaeger Agent](https://medium.com/jaegertracing/deployment-strategies-for-the-jaeger-agent-1d6f91796d09)
-- [Kubernetes DNS 高阶指南](https://juejin.im/entry/5b84a90f51882542e60663cc)
-- [Take OpenTracing for a HotROD ride](https://medium.com/opentracing/take-opentracing-for-a-hotrod-ride-f6e3141f7941)
-- [Monitoring Jaeger](https://www.jaegertracing.io/docs/1.12/monitoring/)
-- [APM和调用链跟踪](https://skywalking.apache.org/zh/blog/2019-03-29-introduction-of-skywalking-and-simple-practice.html)
-- [Jaeger vs Apache Skywalking](https://blog.getantler.io/jaeger-vs-apache-skywalking/)
+[1]: https://www.infoq.cn/article/observability-enhance   "观察之道：带你走进可观察性"
+[2]: https://www.infoq.cn/article/N64dDo-kRPvYbK4jCeET "关于可观察性的三大支柱，你应该了解这些"
+[3]: https://ai.google/research/pubs/pub36356 "Dapper, a Large-Scale Distributed Systems Tracing Infrastructure"
+[4]: https://bigbully.github.io/Dapper-translation/ "Dapper，大规模分布式系统的跟踪系统(中文)"
+[5]: https://landscape.cncf.io/  "CNCF Cloud Native Landscape"
+[6]: https://peter.bourgon.org/blog/2017/02/21/metrics-tracing-and-logging.html  "Metrics, tracing, and logging" 
+[7]: https://opentracing.io/docs/supported-tracers/  "OpenTracing Supported tracers"
+[8]: https://medium.com/jaegertracing/deployment-strategies-for-the-jaeger-agent-1d6f91796d09  "Deployment strategies for the Jaeger Agent"
+[9]: https://juejin.im/entry/5b84a90f51882542e60663cc "Kubernetes DNS 高阶指南"
+[10]: https://medium.com/opentracing/take-opentracing-for-a-hotrod-ride-f6e3141f7941 "Take OpenTracing for a HotROD ride"
+[11]: https://www.jaegertracing.io/docs/1.12/monitoring/ "Monitoring Jaeger"
+[12]: https://skywalking.apache.org/zh/blog/2019-03-29-introduction-of-skywalking-and-simple-practice.html "APM和调用链跟踪"
+[13]: https://blog.getantler.io/jaeger-vs-apache-skywalking/ "Jaeger vs Apache Skywalking"
