@@ -6,9 +6,9 @@
 
 但是随着大型单体应用拆分为微服务，服务之间的依赖和调用变得极为复杂，这些服务可能是不同团队开发的，可能基于不同的语言，微服务之间可能是利用RPC, RESTful API, 也可能是通过消息队列实现调用或通讯。如何理清服务依赖调用关系，如何在这样的环境下迅速debug和排查问题, 追踪各服务处理耗时，查找服务性能瓶颈, 合理对服务的容量评估都变成一个棘手的事情。
 
-## `可观察性`(Observability)
+## `可观察性`(Observability) 及其三大支柱
 
-为了应对这些问题，`可观察性(Observability)` 概念被引入IT 领域，可观察性目前主要包含以下三个方面
+为了应对这些问题，`可观察性(Observability)` 概念被引入软件领域，可观察性目前主要包含以下三大支柱
 
 - 日志(Logging)
 - 度量(Metrics)
@@ -28,9 +28,9 @@ Tracing 介于Logging 和 Metric 之间， 往往以请求的纬度，串联服�
 
 这篇文章详细讨论了三者的关系，有兴趣可以参考: [Metrics, tracing 和 logging 的关系](https://github.com/wu-sheng/me/blob/master/articles/metrics-tracing-and-logging.md#metrics-tracing-%E5%92%8C-logging-%E7%9A%84%E5%85%B3%E7%B3%BB)
 
-下面我们重点介绍下 Tracing
+## 分布式追踪系统（Tracing）定位及其标准
 
-### 功能
+### Tracing的功能定位
 
 - 故障定位 可以看到请求的完整路径，相比离散的日志, 更方便定位问题(由于真实线上环境会设置采样率，可以利用debug开关实现对特定请求的全采样)
 - 依赖梳理 基于调用关系生成服务依赖图
@@ -114,29 +114,31 @@ Baggage Items，Trace的随行数据，是一个键值对集合，它存在于tr
 
 下面比较一下当前的主流开源方案。
 
-## 方案对比
+## 目前主流开源方案及对比
 
-| 方案 | 项目地址 | 开源 | 开发语言 | 背后公司或组织 | Python支持 | 侵入性 | OpenTracing 兼容 | 客户端支持语言 | UI丰富度 | 存储 |
+| 方案 | 项目地址 | 开发语言 | 背后公司或组织 | Python支持 | 侵入性 | OpenTracing 兼容 | 客户端支持语言 | UI丰富度 | 存储 |
 | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- |
-|  jaeger | https://github.com/jaegertracing/jaeger | 是 | Go | CNCF/Google、 Uber | 官方支持，较为完善 | 部分侵入 | 是 | Java, Go, Python, Node.js, C++ and C# | 中 | Memory, Cassandra, Elasticsearch, Kafka |
-| zipkin | https://github.com/apache/incubator-zipkin | 是 | Java | Apache/Twitter | 第三方支持，一般 | 侵入性强 | 是 | Java, C#, Go, PHP, Python 等 https://zipkin.apache.org/pages/tracers_instrumentation.html | 中 | Memory, Cassandra, ElasticSearch and MySQL |
-| Apache SkyWalking | https://github.com/apache/incubator-skywalking | 是 | Java | Apache | 暂无 | 侵入性很低 | 是 | Java, .NET Core, NodeJS and PHP | 较高 | H2、ElasticSearch 6、MySQL、TiDB https://github.com/apache/incubator-skywalking/blob/master/docs/en/setup/backend/backend-storage.md |
-| cat | https://github.com/dianping/cat | 是 | Java | 美团 | 官方支持， 一般 | 侵入性强 | 否 | Java、C/C++、Python、Node.js、Go | 高 | HDFS |
-| pinpoint | https://github.com/naver/pinpoint | 是 | Java | NAVER (一家韩国公司) | 不支持 | 侵入很低 | 否 | Java, PHP | 高 | HBase |
-|Elastic APM | https://github.com/elastic/apm-server| 是 | Go | Elastic | 官方支持 | 侵入很低 | 不完善 | Go, Java, Node.js, Python, Ruby | 中 | Elasticsearch | 
+|  jaeger | https://github.com/jaegertracing/jaeger | Go | CNCF/Google、 Uber | 官方支持，较为完善 | 部分侵入 | 是 | Java, Go, Python, Node.js, C++ and C# | 中 | Memory, Cassandra, Elasticsearch, Kafka |
+| zipkin | https://github.com/apache/incubator-zipkin | Java | Apache/Twitter | 第三方支持，一般 | 侵入性强 | 是 | Java, C#, Go, PHP, Python 等 https://zipkin.apache.org/pages/tracers_instrumentation.html | 中 | Memory, Cassandra, ElasticSearch and MySQL |
+| Apache SkyWalking | https://github.com/apache/incubator-skywalking | Java | Apache | 暂无 | 侵入性很低 | 是 | Java, .NET Core, NodeJS and PHP | 较高 | H2、ElasticSearch 6、MySQL、TiDB https://github.com/apache/incubator-skywalking/blob/master/docs/en/setup/backend/backend-storage.md |
+|Elastic APM | https://github.com/elastic/apm-server | Go | Elastic | 官方支持 | 侵入很低 | 不完善 | Go, Java, Node.js, Python, Ruby | 中 | Elasticsearch |
+| cat | https://github.com/dianping/cat | Java | 美团 | 官方支持， 一般 | 侵入性强 | 否 | Java、C/C++、Python、Node.js、Go | 高 | HDFS |
+| pinpoint | https://github.com/naver/pinpoint | Java | NAVER (一家韩国公司) | 不支持 | 侵入很低 | 否 | Java, PHP | 高 | HBase |
 
-### 需要考虑的问题:
-1. 低性能损耗 
+### 需要考虑的问题
+
+1. 低性能损耗
 2. 应用级的透明  尽量减少业务的侵入，目标是尽量少改或者不用修改代码
 3. 扩展性
 
-###  简单总结
+### 基于以上调研，可以总结如下
+
 1. 如果是纯Java栈的应用，且对于定制化需求低，可以优先考虑侵入型低的 Apache SkyWalking 
 2. 考虑多语言支持、定制化和高扩展，优先选用 Jaeger（Jaeger 与 zipkin 比较类似，且兼容zipkin原始协议，相比之下Jaeger 有一定的后发优势）
 3. 偏向于纯Web应用，无需定制化且已经有ELK的日志系统可以考虑低成本的接入 Elastic APM
 4. cat 和 pinpoint 当前不支持 OpenTracing 标准不做优先考虑
 
-## Jaeger 
+## Jaeger
 
 ### 为什么选择Jaeger
 
@@ -152,11 +154,10 @@ Baggage Items，Trace的随行数据，是一个键值对集合，它存在于tr
 - 支持云原生的部署方式，非常容易部署在 `Kubernetes` 集群中
 - 可观察性 所有组件默认均可暴露 `Prometheus metrics`
 
-### 缺点:
+### 缺点
 
 有一定的侵入性
 Jaeger更专注于链路追踪(tracing), 日志和指标功能比较弱
-
 
 ### 架构图解
 
@@ -183,13 +184,13 @@ Jaeger更专注于链路追踪(tracing), 日志和指标功能比较弱
 分布式追踪系统本身也会造成一定的性能低损耗，如果完整记录每次请求，对于生产环境可能会有极大的性能损耗，一般需要进行采样设置。
 
 当前支持四种采样率设置
+
 1. 固定采样（`sampler.type=const`）  `sampler.param=1` 全采样， `sampler.param=0` 不采样
 2. 按百分比采样（`sampler.type=probabilistic`）  `sampler.param=0.1` 则随机采十分之一的样本
 3. 采样速度限制（`sampler.type=ratelimiting`）  `sampler.param=2.0`  每秒采样两个traces
 4. 动态获取采样率 (`sampler.type=remote`) 这个是默认配置， 可以通过配置从 `Agent` 获取采样率的动态设置。
 
 自适应采样（`Adaptive Sampling`）也已经在开发计划中 https://www.jaegertracing.io/docs/1.12/sampling/#adaptive-sampler
-
 
 ## 部署实践
 
@@ -210,6 +211,7 @@ $ kubectl expose service jaeger-query --port 16686 --type NodePort --name jaeger
 
 # 访问 http://127.0.0.1:16686
 ```
+
 ![Jaeger-Query-UI](./imgs/jaeger/Jaeger-Query-UI.png)
 
 ```bash
@@ -219,11 +221,11 @@ $ kubectl expose service jaeger-example-hotrod --port 8080 --type NodePort --nam
 
 # 任意点击页面上的按钮，生成一写调用数据
 ```
+
 ![HotROD](./imgs/jaeger/HotROD.png)
 ![Jaeger-Query-UI-Data](./imgs/jaeger/Jaeger-Query-UI-Data.png)
 ![Jaeger-Query-Trace](./imgs/jaeger/Jaeger-Query-Trace.png)
 ![Jaeger-Query-Trace-Graph](./imgs/jaeger/Jaeger-Query-Trace-Graph.png)
-
 
 ##### 选择 DaemonSet 还是 sidecar
 
@@ -273,7 +275,6 @@ spec:
       restartPolicy: Always
 ```
 
-
 ```bash
 # 示例应用，通过 kubernetes Downward API 将节点的 信息以环境变量的形式注入到容器中， https://kubernetes.io/docs/tasks/inject-data-application/downward-api-volume-expose-pod-information/
 apiVersion: apps/v1
@@ -300,6 +301,7 @@ spec:
 ```
 
 ##### Agent以Sidecar模式部署
+
 - https://github.com/jaegertracing/jaeger-kubernetes#deploying-the-agent-as-sidecar
 - https://github.com/jaegertracing/jaeger-operator#auto-injection-of-jaeger-agent-sidecars
 
@@ -329,9 +331,11 @@ spec:
             - name: REPORTER_GRPC_HOST_PORT
               value: "jaeger-collector:14250"
 ```
+
 这样 Jaeger Agent 将会监听 localhost:5775/localhost:6831/localhost:6832/localhost:5778 这些本地端口，通常你不需要再在client配置中制定`hostname`或者端口信息，应为这都是默认值。
 
 ### 生成依赖调用关系图
+
 Jager Query UI服务中的 `dependencies` 选项默认点开为空，需要运行 `spark-dependencies` 来生成依赖关系图。
 
 `spark-dependencies` 是一个Spark job 可以通过聚合和分析存储中的 `trace` 数据，生成服务间的依赖关系图，并将依赖链接信息持久化到存储中。
@@ -344,16 +348,16 @@ $ kubectl run -it --rm jaeger-spark-dependencies --env=STORAGE=elasticsearch --e
 # 也可以创建 CronJob， 每天定点生成新的依赖图
 $ kubectl create -f deployment/kubernetes/spark-dependencies/jaeger-spark-dependencies-cronjob.yaml
 ```
+
 ![spark-dependencies](./imgs/jaeger/spark-dependencies.png)
 
 ### 示例：以Python Django项目为例在服务中集成Jaeger
-
 
 ```bash
 
 ```
 
-##### 监控和报警
+#### 监控和报警
 
 当前Jaeger缺少自带的报警机制，但是由于存储可以使用Elasticsearch配合Grafana就可以实现简单的报警监控。
 ![grafana-span](./imgs/monitoring/grafana-span.png)
@@ -372,13 +376,13 @@ $ kubectl delete service jaeger-example-hotrod-node-port
 $ kubectl delete service jaeger-query-node-port
 ```
 
-## Jaeger Python 
+## Jaeger Python
 
- - [jaeger-client-python](https://github.com/jaegertracing/jaeger-client-python)
- - [opentracing-python](https://github.com/opentracing/opentracing-python)
- - [python-django](https://github.com/opentracing-contrib/python-django)
- - [OpenTracing API Contributions (Python)](https://github.com/opentracing-contrib?utf8=%E2%9C%93&q=&type=&language=python)
- - [uber-common/opentracing-python-instrumentation](https://github.com/uber-common/opentracing-python-instrumentation)
+- [jaeger-client-python](https://github.com/jaegertracing/jaeger-client-python)
+- [opentracing-python](https://github.com/opentracing/opentracing-python)
+- [python-django](https://github.com/opentracing-contrib/python-django)
+- [OpenTracing API Contributions (Python)](https://github.com/opentracing-contrib?utf8=%E2%9C%93&q=&type=&language=python)
+- [uber-common/opentracing-python-instrumentation](https://github.com/uber-common/opentracing-python-instrumentation)
 
 ## Links
 
