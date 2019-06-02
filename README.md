@@ -8,7 +8,7 @@
 
 ## `可观察性`(Observability) 及其三大支柱
 
-为了应对这些问题，`可观察性(Observability)` 概念被引入软件领域，可观察性目前主要包含以下三大支柱
+为了应对这些问题，`可观察性(Observability)` 概念被引入软件领域，可观察性目前主要包含以下三大支柱[[1]]
 
 - 日志(Logging)
 - 度量(Metrics)
@@ -26,7 +26,7 @@ Metric 往往是一些聚合的信息，相比Logging 丧失了一些具体信�
 
 Tracing 介于Logging 和 Metric 之间， 往往以请求的纬度，串联服务间的调用信息，即保留了必要的信息，又将分散的日志事件通过 span 串联， 帮助我们更好的理解系统的行为、辅助调试和排查性能问题
 
-这篇文章详细讨论了三者的关系，有兴趣可以参考: [Metrics, tracing 和 logging 的关系](https://github.com/wu-sheng/me/blob/master/articles/metrics-tracing-and-logging.md#metrics-tracing-%E5%92%8C-logging-%E7%9A%84%E5%85%B3%E7%B3%BB)
+这篇文章详细讨论了三者的关系，有兴趣可以参考: [Metrics, tracing, and logging][6]
 
 ## 分布式追踪系统（Tracing）定位及其标准
 
@@ -153,7 +153,7 @@ Baggage Items，Trace的随行数据，是一个键值对集合，它存在于tr
 - 丰富的采样率设置支持 https://www.jaegertracing.io/docs/1.12/sampling/
 - 高扩展，易伸缩
 - 多种存储后端支持
-- 现代的 Web UI 
+- 现代的 Web UI
 - 支持云原生的部署方式，非常容易部署在 `Kubernetes` 集群中
 - 可观察性 所有组件默认均可暴露 `Prometheus metrics`
 
