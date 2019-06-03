@@ -1,32 +1,40 @@
 # 利用Jaeger打造云原生架构下分布式追踪系统
 
 ![tracing](./imgs/tracing.png)
+图片来源: Dapper, a Large-Scale Distributed Systems Tracing Infrastructure [[1]]
 
-随着应用容器化和微服务的兴起，借由`Docker`和 `Kubernetes` 等工具, 服务的快速开发和部署成为可能，构建微服务应用变得越来越简单。
+随着应用容器化和微服务的兴起，借由Docker和 Kubernetes 等工具, 服务的快速开发和部署成为可能，构建微服务应用变得越来越简单。
 
-但是随着大型单体应用拆分为微服务，服务之间的依赖和调用变得极为复杂，这些服务可能是不同团队开发的，可能基于不同的语言，微服务之间可能是利用RPC, RESTful API, 也可能是通过消息队列实现调用或通讯。如何理清服务依赖调用关系，如何在这样的环境下迅速debug和排查问题, 追踪各服务处理耗时，查找服务性能瓶颈, 合理对服务的容量评估都变成一个棘手的事情。
+但是随着大型单体应用拆分为微服务，服务之间的依赖和调用变得极为复杂，这些服务可能是不同团队开发的，可能基于不同的语言，微服务之间可能是利用RPC, RESTful API, 也可能是通过消息队列实现调用或通讯。如何理清服务依赖调用关系，如何在这样的环境下快速debug, 追踪服务处理耗时，查找服务性能瓶颈, 合理对服务的容量评估都变成一个棘手的事情。
 
 ## `可观察性`(Observability) 及其三大支柱
 
-为了应对这些问题，`可观察性(Observability)` 概念被引入软件领域，可观察性目前主要包含以下三大支柱[[1]]
+为了应对这些问题，可观察性(Observability) 这个概念被引入软件领域。 传统的监控和报警主要关注系统的异常情况和失败因素，可观察性更关注的是从系统自身出发，去展现系统的运行状况，更像是一种对系统的自我审视。一个可观察的系统中更关注应用本身的状态, 而不是所处的机器或者网络这样的间接证据，我们希望直接得到应用当前的吞吐和延迟信息，为了达到这个目的，我们就需要合理主动暴露更多应用运行信息。在当前的应用开发环境下，面对复杂系统我们的关注将逐渐由点到点线面体的结合，这能让我们更好的理解系统，不仅知道What,  更能回答Why。[2]
+
+可观察性目前主要包含以下三大支柱 [3]
 
 - 日志(Logging)
 - 度量(Metrics)
 - 分布式追踪(Tracing)
 
-![Observability](./imgs/CNCF-Observability.png)
-
-Logging，Metrics 和 Tracing 有各自专注的部分， 这三者也有相互重叠的部分
+Logging，Metrics 和 Tracing 关系如下图，既各自有其专注的部分，也有相互重叠的部分。
 
 ![metrics-tracing-and-logging](./imgs/metrics-tracing-and-logging.png)
+图片来源[4]
 
-Logging 主要记录一些离散的事件，应用往往通过将定义好格式的日志信息输出到文件，然后用日志收集程序收集起来用于分析和聚合。目前已经有 `ELK` 这样的成熟方案, 相比之下日志记录的信息最为全面和丰富，占用的存储资源正常情况下也最多，虽然可以用时间将所有日志点事件串联起来，但是却很难展示完整的调用关系路径。
- 
-Metric 往往是一些聚合的信息，相比Logging 丧失了一些具体信息，但是占用的空间会要比完整日志小的多，可以用于监控和报警，在这方面 `prometheus` 已经基本上成为了事实上的标准。
+Logging 主要记录一些离散的事件，应用往往通过将定义好格式的日志信息输出到文件，然后用日志收集程序收集起来用于分析和聚合。目前已经有 ELK 这样的成熟方案, 相比之下日志记录的信息最为全面和丰富，占用的存储资源正常情况下也最多，虽然可以用时间将所有日志点事件串联起来，但是却很难展示完整的调用关系路径。
 
-Tracing 介于Logging 和 Metric 之间， 往往以请求的纬度，串联服务间的调用信息，即保留了必要的信息，又将分散的日志事件通过 span 串联， 帮助我们更好的理解系统的行为、辅助调试和排查性能问题
+Metric 往往是一些聚合的信息，相比Logging 丧失了一些具体信息，但是占用的空间会要比完整日志小的多，可以用于监控和报警，在这方面 prometheus 已经基本上成为了事实上的标准。
 
-这篇文章详细讨论了三者的关系，有兴趣可以参考: [Metrics, tracing, and logging][6]
+Tracing 介于Logging 和 Metric 之间， 以请求的维度，串联服务间的调用关系并记录调用耗时，即保留了必要的信息，又将分散的日志事件通过 span 串联， 帮助我们更好的理解系统的行为、辅助调试和排查性能问题，也是文门接下来介绍的重点。
+
+近年来Metric和Tracing有融合的趋势，现在很多流行的APM(应用性能管理)系统，如Datadog 就融合了Tracing和Metric信息。[5]
+
+就在写这篇文章的同时，在kubecon 2019 CNCF 宣布 OpenTracing 和 Google 的 OpenCensus 项目合并。[6] 目前新项目仍然还在建设中，不过已经承诺了对现有 OpenTracing 提供兼容。[7]
+
+下面是CNCF 总结的当前流行的实现可观察性系统的常见软件或服务，Monitoring 栏中以Prometheus 为代表，虽然以收集Metric信息为主，但是结合图中其他工具又可以实现传统的监控报警需求。
+
+![Observability](./imgs/CNCF-Observability.png)
 
 ## 分布式追踪系统（Tracing）定位及其标准
 
@@ -379,12 +387,12 @@ $ kubectl delete service jaeger-example-hotrod-node-port
 $ kubectl delete service jaeger-query-node-port
 ```
 
-[1]: https://www.infoq.cn/article/observability-enhance   "观察之道：带你走进可观察性"
-[2]: https://www.infoq.cn/article/N64dDo-kRPvYbK4jCeET "关于可观察性的三大支柱，你应该了解这些"
-[3]: https://ai.google/research/pubs/pub36356 "Dapper, a Large-Scale Distributed Systems Tracing Infrastructure"
-[4]: https://bigbully.github.io/Dapper-translation/ "Dapper，大规模分布式系统的跟踪系统(中文)"
-[5]: https://landscape.cncf.io/  "CNCF Cloud Native Landscape"
-[6]: https://peter.bourgon.org/blog/2017/02/21/metrics-tracing-and-logging.html  "Metrics, tracing, and logging" 
+[1]: https://ai.google/research/pubs/pub36356 "Dapper, a Large-Scale Distributed Systems Tracing Infrastructure"
+[2]: https://www.infoq.cn/article/observability-enhance   "观察之道：带你走进可观察性"
+[3]: https://www.infoq.cn/article/N64dDo-kRPvYbK4jCeET "关于可观察性的三大支柱，你应该了解这些"
+[4]: https://peter.bourgon.org/blog/2017/02/21/metrics-tracing-and-logging.html  "Metrics, tracing, and logging"
+[5]: https://bigbully.github.io/Dapper-translation/ "Dapper，大规模分布式系统的跟踪系统(中文)"
+[6]: https://landscape.cncf.io/  "CNCF Cloud Native Landscape"
 [7]: https://opentracing.io/docs/supported-tracers/  "OpenTracing Supported tracers"
 [8]: https://medium.com/jaegertracing/deployment-strategies-for-the-jaeger-agent-1d6f91796d09  "Deployment strategies for the Jaeger Agent"
 [9]: https://juejin.im/entry/5b84a90f51882542e60663cc "Kubernetes DNS 高阶指南"
