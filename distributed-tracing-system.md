@@ -116,6 +116,9 @@ outbound_request = ...
 carrier = {}
 tracer.inject(span_context, opentracing.Format.HTTP_HEADERS, carrier)
 
+for key, value in carrier:
+    outbound_request.headers[key] = escape(value)
+
 
 # 下面是被调用方提取的过程
 inbound_request = ...

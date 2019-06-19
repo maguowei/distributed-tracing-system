@@ -81,7 +81,7 @@ kubectl expose service jaeger-query --port 16686 --type NodePort --name jaeger-q
 # 找到暴露的端口号
 kubectl get service jaeger-query-node-port
 
-# 访问 http://127.0.0.1:31618
+# 访问 http://127.0.0.1:${port}
 
 ```
 
@@ -94,41 +94,43 @@ kubectl create -f deployment/kubernetes/example
 kubectl expose service jaeger-example-hotrod --port 8080 --type NodePort --name jaeger-example-hotrod-node-port
 ```
 
-任意点击页面上的按钮，生成一写调用数据
+打开`HotROD`页面, 任意点击页面上的按钮，生成一些调用数据:
 
 ![HotROD](./imgs/jaeger/HotROD.png)
 
-刷新Jaeger Query UI 页面，然后我们就可以看到生成的调用信息：
+刷新Jaeger Query UI 页面，然后我们就可以看到生成的调用信息:
 
 ![Jaeger-Query-UI-Data](./imgs/jaeger/Jaeger-Query-UI-Data.png)
 
-点开具体的一条Trace 可以看到详细的调用过程：
+点开具体的一条Trace 可以看到详细的调用过程:
 
 ![Jaeger-Query-Trace](./imgs/jaeger/Jaeger-Query-Trace.png)
 
-还可以看到图形化的调用关系链：
+还可以看到图形化的调用关系链:
 
 ![Jaeger-Query-Trace-Graph](./imgs/jaeger/Jaeger-Query-Trace-Graph.png)
 
-### 选择 DaemonSet 还是 sidecar
+### 选择 `DaemonSet` 还是 `Sidecar`
 
-Agent 官方目前有两种部署方案， 一种是 `DaemonSet` 方式， 一种是 `Sidecar` 方式。
+`Agent` 官方目前有两种部署方案， 一种是 `DaemonSet` 方式， 一种是 `Sidecar` 方式。
 
-按照官方的说法，Jaeger 中的 Agent 组件是作为 tracer 和 Collector 之间的 buffer， 所以 Agent 应该离 tracer 越近越好，通常应该是 tracer 的 localhost， 基于这样的假定，tracer 能够直接通过UDP发送span 到 Agent，达到最好的性能和可靠性之间的平衡。
+按照官方的说法，`Jaeger` 中的 `Agent` 组件是作为 `tracer` 和 `Collector` 之间的 `buffer`， 所以 `Agent` 应该离 `tracer` 越近越好，通常应该是 `tracer` 的 `localhost`， 基于这样的假定，`tracer` 能够直接通过`UDP`发送`span` 到 `Agent`，达到最好的性能和可靠性之间的平衡。
 
-但是这样的假定在裸机服务器上部署非常棒，但是在现有的云环境和容器中，对于 Kubernetes来说究竟是么是本地（localhost）呢？ 是服务运行所在的节点(node)还是 pod 本身呢？
+这样的假定在裸机服务器上部署非常棒，但在当前流行的云环境和容器中，对于 `Kubernetes` 来说究竟是么是本地（`localhost`）呢？ 是服务运行所在的节点(`node`)还是 `pod` 本身呢？
 
-DaemonSet 的 pod 运行在节点(node)级别，这样的pod如同每个节点上的守护进程，Kubernetes 保证每个节点有且只有一个 Agent pod运行, 如果以 DaemonSet 方式部署，则意味着这个 Agent 会接受节点上所有应用pods发送的数据，对于 Agent 来说所有的 pods 都是同等对待的。这样确实能够节省一些内存，但是一个 Agent 可能要服务同一个节点上的数百个 pods。
+`DaemonSet` 的 `pod` 运行在节点(`node`)级别，这样的`pod`如同每个节点上的守护进程，`Kubernetes` 确保每个节点有且只有一个 `Agent pod`运行, 如果以 `DaemonSet` 方式部署，则意味着这个 `Agent` 会接受节点上所有应用`pods`发送的数据，对于 `Agent` 来说所有的 `pods` 都是同等对待的。这样确实能够节省一些内存，但是一个 `Agent` 可能要服务同一个节点上的数百个 `pods`。
 
-Sidecar 是在应用 pod 中增加其他服务，在Kubernetes 中服务是以 pod 为基本单位的，但是一个 pod 中可以包含多个容器, 这通常可以用来实现嵌入一些基础设施服务， 在 Sidecar 方式部署下，对于 Jaeger Agent 会作为 pod 中的一个容器和 tarcer 并存，由于运行在应用级别，不需要额外的权限，每一个应用都可以将数据发送到不同的 Collector 后端。这样能保证更好的服务扩展性。
+`Sidecar` 是在应用 `pod` 中增加其他服务，在`Kubernetes` 中服务是以 `pod` 为基本单位的，但是一个 `pod` 中可以包含多个容器, 这通常可以用来实现嵌入一些基础设施服务， 在 `Sidecar` 方式部署下，对于 `Jaeger Agent` 会作为 `pod` 中的一个容器和 `tarcer` 并存，由于运行在应用级别，不需要额外的权限，每一个应用都可以将数据发送到不同的 `Collector` 后端。这样能保证更好的服务扩展性。
 
-总结来说，基于你的部署架构，如果是私有云环境，且信任 Kubernetes 集群上运行的应用，可能占用更少内存的 DaemonSet 会适合你。如果是公有云环境，或者希望获得多租户能力，Sidecar 可能更好一些，由于 Agent 服务当前没有任何安全认证手段，这种方式不需要在 pod 外暴露Agent服务，相比之下更加安全一些，尽管内存占用会稍多一些（每个 Agent 内存占用在20M以内）。
+总结来说，基于你的部署架构，如果是私有云环境，且信任 `Kubernetes` 集群上运行的应用，可能占用更少内存的 `DaemonSet` 会适合你。如果是公有云环境，或者希望获得多租户能力，`Sidecar` 可能更好一些，由于 `Agent` 服务当前没有任何安全认证手段，这种方式不需要在 `pod` 外暴露`Agent`服务，相比之下更加安全一些，尽管内存占用会稍多一些（每个 `Agent` 内存占用在`20M`以内）。
 
 #### Agent 以 DaemonSet 模式部署
 
-DaemonSet 方式部署会有一个问题，如何保证应用能够和自己所在节点的Agent通讯？
+DaemonSet 方式部署会有一个问题，如何保证应用能够和自己所在节点的`Agent`通讯？
 
 为解决通讯问题 Agent需要使用主机网络（`hostNetwork`）, 应用中需要借用 `Kubernetes Downward API` 获取节点IP信息。
+
+DaemonSet 模式部署 Agent
 
 ```yaml
 apiVersion: apps/v1
@@ -158,7 +160,7 @@ spec:
       restartPolicy: Always
 ```
 
-示例应用: 通过 `Kubernetes Downward API` 将节点的IP信息(`status.hostIP`) 以环境变量的形式注入到容器中：
+通过 `Kubernetes Downward API` 将节点的IP信息(`status.hostIP`) 以环境变量的形式注入到应用容器中：
 
 ```yaml
 apiVersion: apps/v1
@@ -235,7 +237,7 @@ kubectl create -f deployment/kubernetes/spark-dependencies/jaeger-spark-dependen
 
 ### 应用示例
 
-下面以Python Django项目为例在服务中集成 Jaeger。
+下面以`Python` `Django`项目为例在服务中集成 `Jaeger`。
 
 安装必要的依赖
 
@@ -244,7 +246,7 @@ pip install jaeger-client
 pip install django_opentracing
 ```
 
-Jaeger tracer 配置和初始化：
+`Jaeger tracer` 配置和初始化：
 
 ```python
 from jaeger_client import Config
@@ -274,7 +276,7 @@ def init_jaeger_tracer(service_name='your-app-name'):
 jaeger_tracer = init_jaeger_tracer(service_name='example')
 ```
 
-Django_opentracing 配置, 在Django settings文件中增加以下配置：
+`Django_opentracing` 配置, 在`Django settings`文件中增加以下配置：
 
 ```python
 
@@ -305,9 +307,9 @@ from example.service.jaeger import jaeger_tracer
 OPENTRACING_TRACER = django_opentracing.DjangoTracing(jaeger_tracer)
 ```
 
-这样Django接收的每个请求都会生成一条单独的Trace，当前请求的 path和 method会以Span Tag 的形式记录下来。
+这样`Django`接收的每个请求都会生成一条单独的`Trace`，当前请求的`path`和`method`会以`Span Tag` 的形式记录下来。
 
-手动创建Span和记录调用信息等更详尽的使用方法，请参考官方使用文档。
+手动创建`Span`和记录调用信息等更详尽的使用方法，请参考官方使用文档。
 
 #### 监控和报警
 
