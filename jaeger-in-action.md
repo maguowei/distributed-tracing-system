@@ -120,7 +120,7 @@ kubectl expose service jaeger-example-hotrod --port 8080 --type NodePort --name 
 
 `DaemonSet` 的 `pod` 运行在节点(`node`)级别，这样的`pod`如同每个节点上的守护进程，`Kubernetes` 确保每个节点有且只有一个 `Agent pod`运行, 如果以 `DaemonSet` 方式部署，则意味着这个 `Agent` 会接受节点上所有应用`pods`发送的数据，对于 `Agent` 来说所有的 `pods` 都是同等对待的。这样确实能够节省一些内存，但是一个 `Agent` 可能要服务同一个节点上的数百个 `pods`。
 
-`Sidecar` 是在应用 `pod` 中增加其他服务，在`Kubernetes` 中服务是以 `pod` 为基本单位的，但是一个 `pod` 中可以包含多个容器, 这通常可以用来实现嵌入一些基础设施服务， 在 `Sidecar` 方式部署下，对于 `Jaeger Agent` 会作为 `pod` 中的一个容器和 `tarcer` 并存，由于运行在应用级别，不需要额外的权限，每一个应用都可以将数据发送到不同的 `Collector` 后端。这样能保证更好的服务扩展性。
+`Sidecar` 是在应用 `pod` 中增加其他服务，在`Kubernetes` 中服务是以 `pod` 为基本单位的，但是一个 `pod` 中可以包含多个容器, 这通常可以用来实现嵌入一些基础设施服务， 在 `Sidecar` 方式部署下，对于 `Jaeger Agent` 会作为 `pod` 中的一个容器和 `tarcer` 并存，由于运行在应用级别，不需要额外的权限，每一个应用都可以将数据发送到不同的 `Collector` 后端。这样能保证更好的服务扩展性。现在非常火的服务网格(`Service Mesh`) 往往也是利用 `Sidecar`模式，实现服务的监控、限流，熔断、日志收集等功能。
 
 总结来说，基于你的部署架构，如果是私有云环境，且信任 `Kubernetes` 集群上运行的应用，可能占用更少内存的 `DaemonSet` 会适合你。如果是公有云环境，或者希望获得多租户能力，`Sidecar` 可能更好一些，由于 `Agent` 服务当前没有任何安全认证手段，这种方式不需要在 `pod` 外暴露`Agent`服务，相比之下更加安全一些，尽管内存占用会稍多一些（每个 `Agent` 内存占用在`20M`以内）。
 
