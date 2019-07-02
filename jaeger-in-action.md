@@ -20,7 +20,7 @@
 ### 缺点
 
 - 接入过程有一定的侵入性；
-- 相比与上篇介绍的 `Apache SkyWalking` 、`CAT`，`Jaeger`更专注于链路追踪(`Tracing`), 日志和指标功能支持比较有限；
+- 与上篇介绍的 `Apache SkyWalking` 、`CAT` 相比，`Jaeger`更专注于链路追踪(`Tracing`), 日志和指标功能支持比较有限；
 - 本身缺少监控和报警机制，需要结合第三方工具来实现，比如配合`Grafana` 和 `Prometheus`实现。文章后面会给出简单的示例。
 
 ## 实现原理
@@ -313,9 +313,9 @@ OPENTRACING_TRACER = django_opentracing.DjangoTracing(jaeger_tracer)
 
 #### 监控和报警
 
-当前Jaeger缺少自带的报警机制，但是由于存储可以使用Elasticsearch配合Grafana就可以实现简单的报警监控。
+当前Jaeger缺少自带的报警机制，但是由于存储可以使用Elasticsearch, 配合Grafana就可以实现简单的报警监控。
 ![grafana-span](./imgs/monitoring/grafana-span.png)
-Jaeger本身暴露了Prometheus 格式的metrics 信息， 配合 Grafana可以方便的监控 Jaeger本身的运行状态。
+Jaeger本身暴露了Prometheus 格式的 metrics 信息， 配合 Grafana可以方便的监控 Jaeger本身的运行状态。
 ![Jaeger-prometheus](./imgs/monitoring/Jaeger-prometheus.png)
 
 ## 资源清理
